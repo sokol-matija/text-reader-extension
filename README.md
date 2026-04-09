@@ -1,72 +1,83 @@
-# Text Reader Chrome Extension
+# Text Reader
 
-A Chrome extension that reads any text aloud using your local Kokoro TTS service over Tailscale.
+A Chrome extension that reads any selected text aloud using a self-hosted [Kokoro TTS](https://github.com/remsky/Kokoro-FastAPI) service over [Tailscale](https://tailscale.com).
+
+![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-blue?logo=googlechrome)
+![Manifest V3](https://img.shields.io/badge/Manifest-V3-green)
 
 ## Features
 
-- **Paste & Read** — Paste text into the popup and click "Read Aloud"
-- **Context Menu** — Right-click any selected text and choose "Read Aloud"
-- **Multiple Voices** — Switch between different voice options
-- **Stop Control** — Stop playback mid-speech
-- **Tailscale Support** — Works with your remote Kokoro service over Tailscale
+- **Popup reader** — Paste any text and click Read Aloud
+- **Context menu** — Select text on any webpage, right-click → "Read Aloud"
+- **Persisted text** — Textarea content is saved between popup opens
+- **CSP-safe playback** — Uses Chrome's offscreen document API so audio works on pages with strict Content Security Policy (e.g. GitHub)
+- **Multiple voices** — Kokoro supports 70+ language voices
+- **Default voice** — `af_sky`
+
+## Requirements
+
+- Chrome 109+
+- A [Kokoro TTS](https://github.com/remsky/Kokoro-FastAPI) instance accessible over Tailscale
+- The Tailscale endpoint reachable at `http://<your-machine>:8880`
 
 ## Installation
 
-1. Open Chrome and go to `chrome://extensions/`
-2. Enable **Developer mode** (toggle in top right)
-3. Click **Load unpacked**
-4. Select the `text-reader-extension` folder
-5. The extension should now appear in your Chrome toolbar
+1. Clone or download this repo
+2. Open Chrome and go to `chrome://extensions/`
+3. Enable **Developer mode** (toggle in top right)
+4. Click **Load unpacked** and select this folder
+5. The extension icon appears in your toolbar
 
 ## Usage
 
-### Popup Method
-1. Click the extension icon in your toolbar
-2. Paste text into the textarea
-3. Click "🔊 Read Aloud"
-4. Click "⏹ Stop" to stop playback
+### Popup
+1. Click the extension icon
+2. Paste or type text into the textarea
+3. Click **Read Aloud**
+4. Click **Stop** to cancel playback
 
-### Context Menu Method
+### Context Menu
 1. Select any text on a webpage
-2. Right-click and choose "Read Aloud"
-3. Audio plays automatically in the background
+2. Right-click → **Read Aloud**
+3. Audio plays in the background — closing the popup won't stop it
 
 ## Configuration
 
-The extension connects to:
+Edit `KOKORO_URL` in `background.js` to point to your own Kokoro instance:
+
+```js
+const KOKORO_URL = 'http://your-machine.tailnet.ts.net:8880/v1/audio/speech';
 ```
-http://sokol.falcon-parore.ts.net:8880/v1/audio/speech
+
+Also update `host_permissions` in `manifest.json` to match your endpoint.
+
+## Project Structure
+
+```
+text-reader-extension/
+├── manifest.json      # Extension config (permissions, icons)
+├── background.js      # Service worker: TTS fetch + context menu handler
+├── offscreen.html     # Offscreen document shell (CSP-safe audio context)
+├── offscreen.js       # Audio playback in isolated extension context
+├── popup.html         # Popup UI
+├── popup.js           # Popup logic + storage persistence
+├── styles.css         # Dark theme styles
+└── icons/             # Extension icons (16/48/128px)
 ```
 
-To change the Kokoro endpoint, edit the `KOKORO_URL` in `background.js`.
+## How It Works
 
-## Voice Options
-
-Available voices (from Kokoro/OpenAI API):
-- `alloy` — Default voice
-- `echo` — Male voice
-- `fable` — Female voice
-- `onyx` — Deep voice
-- `nova` — Bright voice
-- `shimmer` — Soft voice
-
-Edit `popup.html` to add more voice options to the dropdown.
+1. User triggers Read Aloud (popup or context menu)
+2. `background.js` POSTs text to Kokoro TTS → receives MP3 as base64 data URL
+3. Background creates an [offscreen document](https://developer.chrome.com/docs/extensions/reference/api/offscreen) (isolated from any webpage's CSP)
+4. Offscreen document plays the audio via an `<audio>` element
+5. Closing the popup has no effect — playback continues in the offscreen context
 
 ## Troubleshooting
 
-**Extension won't connect?**
-- Ensure Kokoro is running on your Tailscale machine
-- Check that `sokol.falcon-parore.ts.net:8880` is reachable
-- Open DevTools (right-click → Inspect) and check the Console for errors
-
-**No audio playing?**
-- Check Chrome's microphone/speaker permissions
-- Try a different voice from the dropdown
-- Check browser console for error messages
-
-## Files
-
-- `manifest.json` — Extension configuration
-- `popup.html` — Popup UI
-- `popup.js` — Popup logic
-- `background.js` — TTS request handler and context menu
+| Problem | Fix |
+|---|---|
+| No audio from context menu | Reload extension in `chrome://extensions/` |
+| Connection timeout | Check Kokoro is running and Tailscale is connected |
+| Audio stops on popup close | Should not happen — uses offscreen document |
+| CSP error in console | Confirm you're on the latest version (offscreen API fixes this) |
