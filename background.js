@@ -5,8 +5,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'speakTextOffscreen') {
     speakText(request.text, request.voice).then(async (result) => {
       if (result.success) {
-        await playAudioInOffscreen(result.audioUrl);
+        // Respond immediately so popup shows "Playing..." while audio runs
         sendResponse({ success: true });
+        // Play audio and broadcast "done" when it finishes
+        await playAudioInOffscreen(result.audioUrl);
+        notifyPopupPlaybackFinished();
       } else {
         sendResponse(result);
       }
@@ -19,6 +22,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return false;
   }
 });
+
+function notifyPopupPlaybackFinished() {
+  chrome.runtime.sendMessage({ action: 'playbackFinished' }).catch(() => {
+    // Popup may be closed — that's fine
+  });
+}
 
 async function speakText(text, voice = 'default') {
   try {
