@@ -28,7 +28,7 @@ async function speakText(text, voice = 'default') {
       body: JSON.stringify({
         model: 'tts-1',
         input: text,
-        voice: voice === 'default' ? 'af_sky' : voice,
+        voice: (!voice || voice === 'default') ? 'af_sky' : voice,
         response_format: 'mp3'
       })
     });
