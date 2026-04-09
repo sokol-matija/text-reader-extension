@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Text Reader",
+  "version": "1.0",
+  "description": "Read any text aloud using Kokoro TTS",
+  "permissions": [
+    "contextMenus",
+    "scripting",
+    "activeTab",
+    "storage",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "http://sokol.falcon-parore.ts.net:8880/*"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Read text aloud",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
