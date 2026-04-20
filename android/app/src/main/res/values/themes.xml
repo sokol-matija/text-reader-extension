@@ -8,8 +8,7 @@
         <item name="colorOnSecondary">@color/text_primary</item>
         <item name="colorSurface">@color/bg_elevated</item>
         <item name="colorOnSurface">@color/text_primary</item>
-        <item name="colorBackground">@color/bg_base</item>
-        <item name="colorOnBackground">@color/text_primary</item>
+        <item name="android:colorBackground">@color/bg_base</item>
         <item name="colorError">@color/status_error</item>
         <item name="android:statusBarColor">@color/bg_elevated</item>
         <item name="android:navigationBarColor">@color/bg_elevated</item>
@@ -55,7 +54,7 @@
         <item name="cornerRadius">8dp</item>
     </style>
 
-    <style name="TextReader.Label">
+    <style name="TextReader.Label" parent="">
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:textSize">13sp</item>
         <item name="android:textStyle">bold</item>
