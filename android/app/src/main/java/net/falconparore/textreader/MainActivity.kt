@@ -22,8 +22,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.CameraController
+import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var statusPill: TextView
     private lateinit var loadingOverlay: View
 
-    private var imageCapture: ImageCapture? = null
+    private var cameraController: LifecycleCameraController? = null
 
     private lateinit var settings: Settings
     private lateinit var ocr: OcrRepository
@@ -130,39 +130,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startCamera() {
-        val providerFuture = ProcessCameraProvider.getInstance(this)
-        providerFuture.addListener({
-            val provider = providerFuture.get()
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
-            val capture = ImageCapture.Builder()
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                .build()
-            imageCapture = capture
-            try {
-                provider.unbindAll()
-                provider.bindToLifecycle(
-                    this,
-                    androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA,
-                    preview,
-                    capture
-                )
-            } catch (e: Exception) {
-                Toast.makeText(this, "Camera init failed: ${e.message}", Toast.LENGTH_LONG).show()
-            }
-        }, ContextCompat.getMainExecutor(this))
+        val controller = LifecycleCameraController(this).apply {
+            setEnabledUseCases(CameraController.IMAGE_CAPTURE)
+            bindToLifecycle(this@MainActivity)
+        }
+        previewView.controller = controller
+        cameraController = controller
     }
 
     private fun capturePhoto() {
-        val capture = imageCapture ?: return
+        val controller = cameraController ?: return
         setStatus(R.string.status_capturing, R.color.status_info)
         loadingOverlay.visibility = View.VISIBLE
 
         val file = File(cacheDir, "capture_${System.currentTimeMillis()}.jpg")
         val output = ImageCapture.OutputFileOptions.Builder(file).build()
 
-        capture.takePicture(
+        controller.takePicture(
             output,
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
