@@ -23,29 +23,29 @@ class VoiceSpinnerAdapter(
     override fun getItem(position: Int): VoiceEntry = entries[position]
     override fun getItemId(position: Int): Long = position.toLong()
 
-    override fun getItemViewType(position: Int): Int =
-        if (entries[position] is VoiceEntry.Header) TYPE_HEADER else TYPE_ITEM
-
-    override fun getViewTypeCount(): Int = 2
-
     override fun isEnabled(position: Int): Boolean = entries[position] !is VoiceEntry.Header
 
     override fun areAllItemsEnabled(): Boolean = false
 
-    /** Compact single-line for the collapsed spinner state. */
+    /**
+     * Compact single-line for the collapsed spinner state.  Fully resets
+     * style every call because Spinner requires a single view type, so a
+     * recycled convertView may have been last rendered as a group header.
+     */
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val entry = entries[position]
-        val tv = (convertView as? TextView) ?: TextView(context).apply {
-            setTextColor(ContextCompat.getColor(context, R.color.text_primary))
-            textSize = 15f
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(8), 0, dp(8))
-        }
+        val tv = (convertView as? TextView) ?: TextView(context)
         tv.text = when (entry) {
             is VoiceEntry.Header -> entry.label
             is VoiceEntry.Item -> entry.display
         }
         tv.setTypeface(null, Typeface.NORMAL)
+        tv.setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+        tv.textSize = 15f
+        tv.isAllCaps = false
+        tv.letterSpacing = 0f
+        tv.gravity = Gravity.CENTER_VERTICAL
+        tv.setPadding(0, dp(8), 0, dp(8))
         return tv
     }
 
@@ -83,9 +83,4 @@ class VoiceSpinnerAdapter(
 
     private fun dp(value: Int): Int =
         (value * context.resources.displayMetrics.density).toInt()
-
-    companion object {
-        private const val TYPE_HEADER = 0
-        private const val TYPE_ITEM = 1
-    }
 }
