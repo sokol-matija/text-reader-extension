@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Text Reader</string>
+
+    <string name="status_ready">Ready</string>
+    <string name="status_capturing">Capturing…</string>
+    <string name="status_ocr">Reading image…</string>
+    <string name="status_fetching">Fetching audio…</string>
+    <string name="status_playing">Playing</string>
+    <string name="status_error">Error</string>
+
+    <string name="btn_read">Read aloud</string>
+    <string name="btn_stop">Stop</string>
+    <string name="btn_retake">Retake</string>
+    <string name="btn_copy">Copy</string>
+    <string name="btn_shutter_desc">Capture photo</string>
+    <string name="btn_settings_desc">Settings</string>
+
+    <string name="voice_label">Voice</string>
+    <string name="extracted_text_label">Extracted text</string>
+    <string name="no_text_found">No text found in the image. Try again with better lighting.</string>
+
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="camera_permission_denied">Camera permission is required to capture photos.</string>
+    <string name="notifications_permission_denied">Notifications are needed for background playback controls.</string>
+
+    <string name="tts_error_network">Can\'t reach Kokoro server. Is Tailscale connected?</string>
+    <string name="tts_error_generic">TTS request failed: %1$s</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_url_label">Kokoro base URL</string>
+    <string name="settings_url_hint">http://sokol.falcon-parore.ts.net:8880</string>
+    <string name="settings_voice_label">Default voice</string>
+    <string name="settings_model_label">Model</string>
+    <string name="settings_model_hint">tts-1</string>
+    <string name="settings_save">Save</string>
+    <string name="settings_test">Test voice</string>
+
+    <string name="notification_channel_playback">TTS playback</string>
+    <string name="notification_channel_playback_desc">Controls the background playback of text-to-speech audio.</string>
+</resources>

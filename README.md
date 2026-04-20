@@ -62,8 +62,17 @@ text-reader-extension/
 ├── popup.html         # Popup UI
 ├── popup.js           # Popup logic + storage persistence
 ├── styles.css         # Dark theme styles
-└── icons/             # Extension icons (16/48/128px)
+├── icons/             # Extension icons (16/48/128px)
+└── android/           # Android companion app (camera + OCR + same Kokoro backend)
 ```
+
+## Android companion app
+
+An Android app lives under [`android/`](android/README.md). Point the camera
+at text, tap the shutter, and the extracted text is read aloud through the
+same Kokoro server. Uses Google ML Kit for on-device OCR and Media3 for
+background playback with lock-screen controls. See
+[`android/README.md`](android/README.md) for build and install instructions.
 
 ## How It Works
 
