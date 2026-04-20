@@ -37,6 +37,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import androidx.appcompat.app.AlertDialog
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import com.google.common.util.concurrent.ListenableFuture
@@ -166,6 +167,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         setStatus(R.string.status_ready, R.color.status_success)
+
+        TextReaderApp.readAndClear(this)?.let { trace ->
+            AlertDialog.Builder(this)
+                .setTitle("Previous crash")
+                .setMessage(trace)
+                .setPositiveButton("Copy") { _, _ ->
+                    val clip = ClipData.newPlainText("crash", trace)
+                    (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
+                }
+                .setNegativeButton("Dismiss", null)
+                .show()
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
@@ -306,14 +319,25 @@ class MainActivity : AppCompatActivity() {
 
         extractedText.text = text
 
-        val panel = PlaybackPanel(view.findViewById(R.id.playbackPanel), lifecycleScope).apply {
-            onSaveRequested = { file ->
-                pendingSaveFile = file
-                createDocument.launch(AudioExport.suggestedFilename())
+        try {
+            val panelRoot = view.findViewById<View>(R.id.playbackPanel)
+            if (panelRoot != null) {
+                val panel = PlaybackPanel(panelRoot, lifecycleScope).apply {
+                    onSaveRequested = { file ->
+                        pendingSaveFile = file
+                        createDocument.launch(AudioExport.suggestedFilename())
+                    }
+                }
+                reviewPlaybackPanel = panel
+                controller?.let { panel.attachController(it) }
             }
+        } catch (e: Exception) {
+            Toast.makeText(
+                this,
+                "Playback panel init failed: ${e.javaClass.simpleName}: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
         }
-        reviewPlaybackPanel = panel
-        controller?.let { panel.attachController(it) }
 
         spinner.adapter = VoiceSpinnerAdapter(this)
         spinner.setSelection(Voices.groupedIndexOf(reviewVoiceId))
