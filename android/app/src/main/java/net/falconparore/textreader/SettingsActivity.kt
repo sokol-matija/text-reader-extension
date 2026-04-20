@@ -2,7 +2,6 @@ package net.falconparore.textreader
 
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
@@ -32,19 +31,18 @@ class SettingsActivity : AppCompatActivity() {
         urlInput.setText(settings.baseUrl)
         modelInput.setText(settings.model)
 
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            Voices.all.map { it.label }
-        )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        voiceSpinner.adapter = adapter
-        voiceSpinner.setSelection(Voices.indexOf(settings.voice))
+        voiceSpinner.adapter = VoiceSpinnerAdapter(this)
+        voiceSpinner.setSelection(Voices.groupedIndexOf(settings.voice))
+
+        fun selectedVoiceIdOrDefault(): String {
+            val entry = Voices.grouped.getOrNull(voiceSpinner.selectedItemPosition)
+            return (entry as? VoiceEntry.Item)?.id ?: Voices.DEFAULT_ID
+        }
 
         btnSave.setOnClickListener {
             settings.baseUrl = urlInput.text.toString().trim()
             settings.model = modelInput.text.toString().trim()
-            settings.voice = Voices.all[voiceSpinner.selectedItemPosition].id
+            settings.voice = selectedVoiceIdOrDefault()
             Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show()
             finish()
         }
@@ -53,7 +51,7 @@ class SettingsActivity : AppCompatActivity() {
             val tempSettings = Settings(this).also {
                 it.baseUrl = urlInput.text.toString().trim()
                 it.model = modelInput.text.toString().trim()
-                it.voice = Voices.all[voiceSpinner.selectedItemPosition].id
+                it.voice = selectedVoiceIdOrDefault()
             }
             val client = KokoroTtsClient(tempSettings)
             Toast.makeText(this, "Sending test request…", Toast.LENGTH_SHORT).show()

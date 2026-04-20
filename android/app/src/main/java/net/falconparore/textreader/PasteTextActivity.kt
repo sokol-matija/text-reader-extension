@@ -4,7 +4,6 @@ import android.content.ComponentName
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
@@ -54,17 +53,12 @@ class PasteTextActivity : AppCompatActivity() {
         btnStop = findViewById(R.id.btnStop)
         btnClear = findViewById(R.id.btnClear)
 
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            Voices.all.map { it.label }
-        )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        voiceSpinner.adapter = adapter
-        voiceSpinner.setSelection(Voices.indexOf(settings.voice))
+        voiceSpinner.adapter = VoiceSpinnerAdapter(this)
+        voiceSpinner.setSelection(Voices.groupedIndexOf(settings.voice))
         voiceSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                settings.voice = Voices.all[pos].id
+                val entry = Voices.grouped[pos]
+                if (entry is VoiceEntry.Item) settings.voice = entry.id
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }

@@ -29,6 +29,12 @@
 
     <string name="copied_to_clipboard">Copied to clipboard</string>
     <string name="camera_permission_denied">Camera permission is required to capture photos.</string>
+    <string name="camera_permission_title">Camera access needed</string>
+    <string name="camera_permission_body">Text Reader uses the camera to scan text from the world around you. Nothing leaves the phone \u2014 OCR runs on-device.</string>
+    <string name="camera_permission_grant">Grant camera access</string>
+    <string name="camera_permission_settings">Open app settings</string>
+    <string name="camera_hint">Point at text and tap the shutter</string>
+    <string name="btn_flash_desc">Toggle flash</string>
     <string name="notifications_permission_denied">Notifications are needed for background playback controls.</string>
 
     <string name="tts_error_network">Can\'t reach Kokoro server. Is Tailscale connected?</string>

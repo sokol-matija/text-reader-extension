@@ -10,11 +10,10 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings as AndroidSettings
 import android.view.View
 import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.ImageButton
-import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -25,9 +24,13 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -44,13 +47,20 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
 
     private lateinit var previewView: PreviewView
+    private lateinit var appBar: View
+    private lateinit var bottomBar: View
     private lateinit var shutterButton: ImageButton
     private lateinit var settingsButton: ImageButton
     private lateinit var pasteButton: ImageButton
+    private lateinit var flashButton: ImageButton
     private lateinit var statusPill: TextView
     private lateinit var loadingOverlay: View
+    private lateinit var permissionOverlay: View
+    private lateinit var btnGrantCamera: MaterialButton
+    private lateinit var btnOpenSettings: MaterialButton
 
     private var cameraController: LifecycleCameraController? = null
+    private var torchOn: Boolean = false
 
     private lateinit var settings: Settings
     private lateinit var ocr: OcrRepository
@@ -66,8 +76,17 @@ class MainActivity : AppCompatActivity() {
     private val requestCamera = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) startCamera()
-        else Toast.makeText(this, R.string.camera_permission_denied, Toast.LENGTH_LONG).show()
+        if (granted) {
+            hidePermissionOverlay()
+            if (cameraController == null) startCamera()
+        } else if (!ActivityCompat.shouldShowRequestPermissionRationale(
+                this, Manifest.permission.CAMERA
+            )
+        ) {
+            // Permanently denied — offer the app-settings escape hatch.
+            btnGrantCamera.visibility = View.GONE
+            btnOpenSettings.visibility = View.VISIBLE
+        }
     }
 
     private val requestNotifications = registerForActivityResult(
@@ -80,15 +99,29 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, true)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_main)
 
         previewView = findViewById(R.id.previewView)
+        appBar = findViewById(R.id.appBar)
+        bottomBar = findViewById(R.id.bottomBar)
         shutterButton = findViewById(R.id.shutterButton)
         settingsButton = findViewById(R.id.settingsButton)
         pasteButton = findViewById(R.id.pasteButton)
+        flashButton = findViewById(R.id.flashButton)
         statusPill = findViewById(R.id.statusPill)
         loadingOverlay = findViewById(R.id.loadingOverlay)
+        permissionOverlay = findViewById(R.id.permissionOverlay)
+        btnGrantCamera = findViewById(R.id.btnGrantCamera)
+        btnOpenSettings = findViewById(R.id.btnOpenSettings)
+
+        val root = findViewById<View>(R.id.rootLayout)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            appBar.updatePadding(top = bars.top)
+            bottomBar.updatePadding(bottom = bars.bottom + (32 * resources.displayMetrics.density).toInt())
+            insets
+        }
 
         settings = Settings(this)
         ocr = OcrRepository()
@@ -102,6 +135,18 @@ class MainActivity : AppCompatActivity() {
         pasteButton.setOnClickListener {
             startActivity(Intent(this, PasteTextActivity::class.java))
         }
+        flashButton.setOnClickListener { toggleFlash() }
+
+        btnGrantCamera.setOnClickListener {
+            requestCamera.launch(Manifest.permission.CAMERA)
+        }
+        btnOpenSettings.setOnClickListener {
+            startActivity(
+                Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", packageName, null)
+                }
+            )
+        }
 
         setStatus(R.string.status_ready, R.color.status_success)
 
@@ -113,15 +158,6 @@ class MainActivity : AppCompatActivity() {
                 requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
-
-        if (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            startCamera()
-        } else {
-            requestCamera.launch(Manifest.permission.CAMERA)
-        }
     }
 
     override fun onStart() {
@@ -129,9 +165,34 @@ class MainActivity : AppCompatActivity() {
         connectController()
     }
 
+    override fun onResume() {
+        super.onResume()
+        val granted = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+        if (granted) {
+            hidePermissionOverlay()
+            if (cameraController == null) startCamera()
+        } else {
+            showPermissionOverlay()
+        }
+    }
+
     override fun onStop() {
         releaseController()
         super.onStop()
+    }
+
+    private fun showPermissionOverlay() {
+        permissionOverlay.visibility = View.VISIBLE
+        // Reset to the primary CTA; the launcher's callback will swap to
+        // "Open app settings" if we detect a permanent denial.
+        btnGrantCamera.visibility = View.VISIBLE
+        btnOpenSettings.visibility = View.GONE
+    }
+
+    private fun hidePermissionOverlay() {
+        permissionOverlay.visibility = View.GONE
     }
 
     private fun startCamera() {
@@ -141,6 +202,18 @@ class MainActivity : AppCompatActivity() {
         }
         previewView.controller = controller
         cameraController = controller
+        // Reset flash state when (re)binding.
+        torchOn = false
+        flashButton.setImageResource(R.drawable.ic_flash_off)
+    }
+
+    private fun toggleFlash() {
+        val controller = cameraController ?: return
+        torchOn = !torchOn
+        controller.enableTorch(torchOn)
+        flashButton.setImageResource(
+            if (torchOn) R.drawable.ic_flash_on else R.drawable.ic_flash_off
+        )
     }
 
     private fun capturePhoto() {
@@ -216,18 +289,15 @@ class MainActivity : AppCompatActivity() {
 
         extractedText.text = text
 
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            Voices.all.map { it.label }
-        )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinner.adapter = adapter
-        spinner.setSelection(Voices.indexOf(reviewVoiceId))
+        spinner.adapter = VoiceSpinnerAdapter(this)
+        spinner.setSelection(Voices.groupedIndexOf(reviewVoiceId))
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                reviewVoiceId = Voices.all[pos].id
-                settings.voice = reviewVoiceId
+                val entry = Voices.grouped[pos]
+                if (entry is VoiceEntry.Item) {
+                    reviewVoiceId = entry.id
+                    settings.voice = reviewVoiceId
+                }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }

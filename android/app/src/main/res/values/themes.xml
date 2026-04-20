@@ -10,8 +10,8 @@
         <item name="colorOnSurface">@color/text_primary</item>
         <item name="android:colorBackground">@color/bg_base</item>
         <item name="colorError">@color/status_error</item>
-        <item name="android:statusBarColor">@color/bg_elevated</item>
-        <item name="android:navigationBarColor">@color/bg_elevated</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
         <item name="android:windowBackground">@color/bg_base</item>
         <item name="bottomSheetDialogTheme">@style/Theme.TextReader.BottomSheet</item>

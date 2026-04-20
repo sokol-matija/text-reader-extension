@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_base"
-    android:fitsSystemWindows="true">
+    android:background="@color/bg_base">
 
-    <!-- Camera preview fills the screen -->
+    <!-- Camera preview fills the screen behind everything -->
     <androidx.camera.view.PreviewView
         android:id="@+id/previewView"
         android:layout_width="0dp"
@@ -16,13 +16,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Top app bar -->
+    <!-- Top gradient scrim for readability behind the app bar -->
+    <View
+        android:id="@+id/scrimTop"
+        android:layout_width="0dp"
+        android:layout_height="160dp"
+        android:background="@drawable/scrim_top"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Top app bar (transparent, sits on the scrim) -->
     <LinearLayout
         android:id="@+id/appBar"
         android:layout_width="0dp"
         android:layout_height="56dp"
         android:orientation="horizontal"
-        android:background="@color/bg_elevated"
+        android:background="@android:color/transparent"
         android:gravity="center_vertical"
         android:paddingStart="16dp"
         android:paddingEnd="8dp"
@@ -74,21 +84,132 @@
             android:contentDescription="@string/btn_settings_desc" />
     </LinearLayout>
 
-    <!-- Shutter button -->
-    <ImageButton
-        android:id="@+id/shutterButton"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:background="@drawable/shutter_bg"
-        android:src="@drawable/ic_shutter"
-        android:scaleType="centerInside"
-        android:contentDescription="@string/btn_shutter_desc"
-        android:layout_marginBottom="40dp"
+    <!-- Hint text centered above the bottom controls -->
+    <TextView
+        android:id="@+id/cameraHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/camera_hint"
+        android:textColor="#E6FFFFFF"
+        android:textSize="13sp"
+        android:background="#66000000"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:layout_marginBottom="24dp"
+        app:layout_constraintBottom_toTopOf="@id/bottomBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Bottom gradient scrim -->
+    <View
+        android:id="@+id/scrimBottom"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:background="@drawable/scrim_bottom"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Loading overlay while OCR runs -->
+    <!-- Bottom control bar: flash (left), shutter (center) -->
+    <FrameLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:paddingBottom="32dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/flashButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="start|center_vertical"
+            android:layout_marginStart="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_flash_off"
+            android:contentDescription="@string/btn_flash_desc" />
+
+        <ImageButton
+            android:id="@+id/shutterButton"
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:layout_gravity="center"
+            android:background="@drawable/shutter_bg"
+            android:contentDescription="@string/btn_shutter_desc" />
+    </FrameLayout>
+
+    <!-- Camera permission overlay: shown when CAMERA is not granted -->
+    <FrameLayout
+        android:id="@+id/permissionOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/bg_base"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_gravity="center"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_camera_big"
+                android:contentDescription="@null"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/camera_permission_title"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/camera_permission_body"
+                android:textColor="@color/text_muted"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:lineSpacingMultiplier="1.35"
+                android:layout_marginBottom="24dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGrantCamera"
+                style="@style/TextReader.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/camera_permission_grant"
+                android:layout_marginBottom="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnOpenSettings"
+                style="@style/TextReader.Button.Secondary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/camera_permission_settings"
+                android:visibility="gone" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Loading overlay while OCR/capture runs -->
     <FrameLayout
         android:id="@+id/loadingOverlay"
         android:layout_width="0dp"
@@ -97,7 +218,7 @@
         android:visibility="gone"
         android:clickable="true"
         android:focusable="true"
-        app:layout_constraintTop_toBottomOf="@id/appBar"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">

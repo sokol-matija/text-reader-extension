@@ -1,10 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#33ffffff">
+    android:color="#40ffffff">
     <item>
-        <shape android:shape="oval">
-            <solid android:color="#40000000" />
-            <stroke android:width="2dp" android:color="#80ffffff" />
-        </shape>
+        <layer-list>
+            <!-- outer translucent ring for tactile affordance -->
+            <item>
+                <shape android:shape="oval">
+                    <solid android:color="#33000000" />
+                    <stroke android:width="3dp" android:color="#ffffffff" />
+                </shape>
+            </item>
+            <!-- inner white pill, inset so a gap sits between ring and fill -->
+            <item
+                android:left="10dp"
+                android:top="10dp"
+                android:right="10dp"
+                android:bottom="10dp">
+                <shape android:shape="oval">
+                    <solid android:color="#ffffffff" />
+                </shape>
+            </item>
+        </layer-list>
     </item>
 </ripple>
