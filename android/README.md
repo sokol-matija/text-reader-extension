@@ -19,22 +19,30 @@ same self-hosted **Kokoro TTS** server the extension uses.
 
 ## Build & install
 
-The Gradle wrapper binaries (`gradlew`, `gradle-wrapper.jar`) are not committed.
-Generate them once on your machine, then build.
+### Option A — Download the APK from GitHub Actions (easiest, no SDK needed)
 
-### Option A — Android Studio (easiest)
+Every push to this branch runs `.github/workflows/android.yml`, which builds
+a debug APK on a Linux runner and uploads it as an artifact.
+
+1. Open **Actions → Android build** on GitHub.
+2. Click the latest successful run for your branch.
+3. Download **`text-reader-debug-apk`** from the Artifacts section.
+4. Unzip → transfer `app-debug.apk` to your phone (USB, Drive, etc.).
+5. On the phone: open the file, allow "Install unknown apps" for your file
+   manager if prompted, tap install.
+
+### Option B — Android Studio
 
 1. Open Android Studio → **Open** → select the `android/` folder.
-2. Studio will download the Gradle wrapper and sync automatically.
+2. Studio syncs (may prompt to install SDK components).
 3. Plug in the phone, pick it in the device dropdown, hit **Run**.
 
-### Option B — Command line
+### Option C — Command line
 
-Requires a system Gradle (≥ 8.7) and the Android SDK on `ANDROID_HOME`.
+Requires the Android SDK on `ANDROID_HOME`.
 
 ```bash
 cd android
-gradle wrapper --gradle-version 8.7       # first time only
 ./gradlew :app:assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
