@@ -70,8 +70,25 @@ class MainActivity : AppCompatActivity() {
     private var controllerFuture: ListenableFuture<MediaController>? = null
 
     private var reviewSheet: BottomSheetDialog? = null
+    private var reviewPlaybackPanel: PlaybackPanel? = null
     private var reviewVoiceId: String = Voices.DEFAULT_ID
     private var currentText: String = ""
+    private var pendingSaveFile: File? = null
+
+    private val createDocument = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("audio/mpeg")
+    ) { uri: Uri? ->
+        val source = pendingSaveFile
+        pendingSaveFile = null
+        if (uri == null || source == null) return@registerForActivityResult
+        val ok = AudioExport.copyToUri(contentResolver, source, uri)
+        val msg = if (ok) {
+            getString(R.string.save_success, uri.lastPathSegment ?: "audio.mp3")
+        } else {
+            getString(R.string.save_failure, "write failed")
+        }
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+    }
 
     private val requestCamera = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -289,6 +306,15 @@ class MainActivity : AppCompatActivity() {
 
         extractedText.text = text
 
+        val panel = PlaybackPanel(view.findViewById(R.id.playbackPanel), lifecycleScope).apply {
+            onSaveRequested = { file ->
+                pendingSaveFile = file
+                createDocument.launch(AudioExport.suggestedFilename())
+            }
+        }
+        reviewPlaybackPanel = panel
+        controller?.let { panel.attachController(it) }
+
         spinner.adapter = VoiceSpinnerAdapter(this)
         spinner.setSelection(Voices.groupedIndexOf(reviewVoiceId))
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -311,6 +337,7 @@ class MainActivity : AppCompatActivity() {
             controller?.stop()
             btnRead.isEnabled = true
             btnStop.isEnabled = false
+            reviewPlaybackPanel?.stopPolling()
             setStatus(R.string.status_ready, R.color.status_success)
         }
         btnCopy.setOnClickListener {
@@ -322,6 +349,8 @@ class MainActivity : AppCompatActivity() {
 
         reviewSheet = sheet
         sheet.setOnDismissListener {
+            reviewPlaybackPanel?.stopPolling()
+            reviewPlaybackPanel = null
             reviewSheet = null
         }
         sheet.show()
@@ -331,7 +360,11 @@ class MainActivity : AppCompatActivity() {
         setStatus(R.string.status_fetching, R.color.status_info)
         lifecycleScope.launch {
             when (val result = tts.synthesise(text, cacheDir)) {
-                is KokoroTtsClient.Result.Success -> play(result.mp3File)
+                is KokoroTtsClient.Result.Success -> {
+                    reviewPlaybackPanel?.showForFile(result.mp3File)
+                    play(result.mp3File)
+                    reviewPlaybackPanel?.startPolling()
+                }
                 is KokoroTtsClient.Result.Failure -> {
                     setStatus(R.string.status_error, R.color.status_error)
                     val msg = if (result.cause is java.net.UnknownHostException ||
@@ -371,6 +404,7 @@ class MainActivity : AppCompatActivity() {
                 return@addListener
             }
             controller = c
+            reviewPlaybackPanel?.attachController(c)
             c.addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(state: Int) {
                     when (state) {
@@ -379,6 +413,7 @@ class MainActivity : AppCompatActivity() {
                             setStatus(R.string.status_ready, R.color.status_success)
                             reviewSheet?.findViewById<MaterialButton>(R.id.btnRead)?.isEnabled = true
                             reviewSheet?.findViewById<MaterialButton>(R.id.btnStop)?.isEnabled = false
+                            reviewPlaybackPanel?.stopPolling()
                         }
                         else -> Unit
                     }

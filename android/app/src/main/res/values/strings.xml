@@ -49,6 +49,9 @@
     <string name="settings_save">Save</string>
     <string name="settings_test">Test voice</string>
 
+    <string name="btn_save_audio">Save audio</string>
+    <string name="save_success">Saved: %1$s</string>
+    <string name="save_failure">Couldn\'t save audio: %1$s</string>
     <string name="notification_channel_playback">TTS playback</string>
     <string name="notification_channel_playback_desc">Controls the background playback of text-to-speech audio.</string>
 </resources>

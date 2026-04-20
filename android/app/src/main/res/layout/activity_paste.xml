@@ -78,4 +78,10 @@
             android:layout_marginStart="4dp"
             android:text="@string/btn_clear" />
     </LinearLayout>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="12dp" />
+
+    <include layout="@layout/view_playback_panel" />
 </LinearLayout>
