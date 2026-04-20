@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var previewView: PreviewView
     private lateinit var shutterButton: ImageButton
     private lateinit var settingsButton: ImageButton
+    private lateinit var pasteButton: ImageButton
     private lateinit var statusPill: TextView
     private lateinit var loadingOverlay: View
 
@@ -85,6 +86,7 @@ class MainActivity : AppCompatActivity() {
         previewView = findViewById(R.id.previewView)
         shutterButton = findViewById(R.id.shutterButton)
         settingsButton = findViewById(R.id.settingsButton)
+        pasteButton = findViewById(R.id.pasteButton)
         statusPill = findViewById(R.id.statusPill)
         loadingOverlay = findViewById(R.id.loadingOverlay)
 
@@ -96,6 +98,9 @@ class MainActivity : AppCompatActivity() {
         shutterButton.setOnClickListener { capturePhoto() }
         settingsButton.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
+        }
+        pasteButton.setOnClickListener {
+            startActivity(Intent(this, PasteTextActivity::class.java))
         }
 
         setStatus(R.string.status_ready, R.color.status_success)

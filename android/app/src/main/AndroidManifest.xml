@@ -41,6 +41,12 @@
             android:parentActivityName=".MainActivity"
             android:label="@string/settings_title" />
 
+        <activity
+            android:name=".PasteTextActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:label="@string/paste_title" />
+
         <service
             android:name=".TtsPlaybackService"
             android:exported="false"
