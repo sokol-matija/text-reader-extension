@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -38,6 +40,8 @@ class PasteTextActivity : AppCompatActivity() {
     private lateinit var btnTranslate: MaterialButton
     private lateinit var voiceSpinner: Spinner
     private lateinit var playbackPanel: PlaybackPanel
+    private lateinit var loaderRow: LinearLayout
+    private lateinit var loaderLabel: TextView
 
     private var controller: MediaController? = null
     private var controllerFuture: ListenableFuture<MediaController>? = null
@@ -78,6 +82,8 @@ class PasteTextActivity : AppCompatActivity() {
         btnClear = findViewById(R.id.btnClear)
         btnStripMarkdown = findViewById(R.id.btnStripMarkdown)
         btnTranslate = findViewById(R.id.btnTranslate)
+        loaderRow = findViewById(R.id.loaderRow)
+        loaderLabel = findViewById(R.id.loaderLabel)
 
         playbackPanel = PlaybackPanel(findViewById(R.id.playbackPanel), lifecycleScope).apply {
             onSaveRequested = { file ->
@@ -102,10 +108,12 @@ class PasteTextActivity : AppCompatActivity() {
             btnRead.isEnabled = true
             btnStop.isEnabled = false
             playbackPanel.stopPolling()
+            hideLoader()
         }
         btnClear.setOnClickListener {
             textInput.setText("")
             playbackPanel.reset()
+            hideLoader()
         }
         btnStripMarkdown.setOnClickListener { onStripMarkdownClicked() }
         btnTranslate.setOnClickListener { onTranslateClicked() }
@@ -113,13 +121,26 @@ class PasteTextActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        connectController()
+        if (controller == null) connectController()
     }
 
     override fun onStop() {
         playbackPanel.stopPolling()
-        releaseController()
         super.onStop()
+    }
+
+    override fun onDestroy() {
+        releaseController()
+        super.onDestroy()
+    }
+
+    private fun showLoader(messageRes: Int) {
+        loaderLabel.setText(messageRes)
+        loaderRow.visibility = View.VISIBLE
+    }
+
+    private fun hideLoader() {
+        loaderRow.visibility = View.GONE
     }
 
     private fun onReadClicked() {
@@ -130,6 +151,7 @@ class PasteTextActivity : AppCompatActivity() {
         }
         btnRead.isEnabled = false
         btnStop.isEnabled = true
+        showLoader(R.string.status_fetching)
         fetchAndPlay(text)
     }
 
@@ -151,6 +173,7 @@ class PasteTextActivity : AppCompatActivity() {
             return
         }
         btnTranslate.isEnabled = false
+        showLoader(R.string.status_translating)
         lifecycleScope.launch {
             try {
                 val detected = translation.detect(raw)
@@ -183,6 +206,7 @@ class PasteTextActivity : AppCompatActivity() {
                 textInput.setSelection(translated.length)
             } finally {
                 btnTranslate.isEnabled = true
+                hideLoader()
             }
         }
     }
@@ -193,6 +217,7 @@ class PasteTextActivity : AppCompatActivity() {
                 is KokoroTtsClient.Result.Success -> {
                     val c = controller
                     if (c == null) {
+                        hideLoader()
                         Toast.makeText(
                             this@PasteTextActivity,
                             "Playback not ready yet",
@@ -208,6 +233,7 @@ class PasteTextActivity : AppCompatActivity() {
                     c.prepare()
                     c.play()
                     playbackPanel.startPolling()
+                    hideLoader()
                 }
                 is KokoroTtsClient.Result.Failure -> {
                     val msg = if (result.cause is java.net.UnknownHostException ||
@@ -220,6 +246,7 @@ class PasteTextActivity : AppCompatActivity() {
                     Toast.makeText(this@PasteTextActivity, msg, Toast.LENGTH_LONG).show()
                     btnRead.isEnabled = true
                     btnStop.isEnabled = false
+                    hideLoader()
                 }
             }
         }
