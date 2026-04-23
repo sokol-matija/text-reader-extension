@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var shutterButton: ImageButton
     private lateinit var settingsButton: ImageButton
     private lateinit var pasteButton: ImageButton
+    private lateinit var galleryButton: ImageButton
     private lateinit var flashButton: ImageButton
     private lateinit var statusPill: TextView
     private lateinit var loadingOverlay: View
@@ -116,6 +117,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val pickImage = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            loadingOverlay.visibility = View.VISIBLE
+            runOcr(uri)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -127,6 +137,7 @@ class MainActivity : AppCompatActivity() {
         shutterButton = findViewById(R.id.shutterButton)
         settingsButton = findViewById(R.id.settingsButton)
         pasteButton = findViewById(R.id.pasteButton)
+        galleryButton = findViewById(R.id.galleryButton)
         flashButton = findViewById(R.id.flashButton)
         statusPill = findViewById(R.id.statusPill)
         loadingOverlay = findViewById(R.id.loadingOverlay)
@@ -154,6 +165,13 @@ class MainActivity : AppCompatActivity() {
         }
         pasteButton.setOnClickListener {
             startActivity(Intent(this, PasteTextActivity::class.java))
+        }
+        galleryButton.setOnClickListener {
+            pickImage.launch(
+                androidx.activity.result.PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                )
+            )
         }
         flashButton.setOnClickListener { toggleFlash() }
 

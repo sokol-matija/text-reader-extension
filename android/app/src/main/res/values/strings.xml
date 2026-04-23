@@ -23,6 +23,7 @@
     <string name="btn_shutter_desc">Capture photo</string>
     <string name="btn_settings_desc">Settings</string>
     <string name="btn_paste_desc">Paste text</string>
+    <string name="btn_gallery_desc">Import from gallery</string>
 
     <string name="paste_title">Paste text</string>
     <string name="paste_text_label">Text</string>
