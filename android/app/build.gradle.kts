@@ -58,6 +58,11 @@ dependencies {
     // ML Kit on-device text recognition (Latin)
     implementation("com.google.mlkit:text-recognition:16.0.1")
 
+    // ML Kit on-device language identification + translation (Kokoro voices are
+    // English-only, so we auto-translate non-English OCR text before TTS).
+    implementation("com.google.mlkit:language-id:17.0.6")
+    implementation("com.google.mlkit:translate:17.0.3")
+
     // Media3 for background playback + MediaSession
     val media3Version = "1.4.1"
     implementation("androidx.media3:media3-exoplayer:$media3Version")

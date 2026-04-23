@@ -5,16 +5,30 @@
     <string name="status_ready">Ready</string>
     <string name="status_capturing">Capturing…</string>
     <string name="status_ocr">Reading image…</string>
+    <string name="status_translating">Translating…</string>
     <string name="status_fetching">Fetching audio…</string>
     <string name="status_playing">Playing</string>
     <string name="status_error">Error</string>
+
+    <string name="chip_english">English</string>
+    <string name="chip_original">Original</string>
+    <string name="chip_original_with_lang">Original (%1$s)</string>
+    <string name="translation_failed">Translation unavailable — showing original.</string>
 
     <string name="btn_read">Read aloud</string>
     <string name="btn_stop">Stop</string>
     <string name="btn_retake">Retake</string>
     <string name="btn_copy">Copy</string>
+    <string name="btn_clear">Clear</string>
     <string name="btn_shutter_desc">Capture photo</string>
     <string name="btn_settings_desc">Settings</string>
+    <string name="btn_paste_desc">Paste text</string>
+    <string name="btn_gallery_desc">Import from gallery</string>
+
+    <string name="paste_title">Paste text</string>
+    <string name="paste_text_label">Text</string>
+    <string name="paste_text_hint">Paste or type anything you want read aloud\u2026</string>
+    <string name="paste_empty">Type or paste something to read.</string>
 
     <string name="voice_label">Voice</string>
     <string name="extracted_text_label">Extracted text</string>
@@ -22,6 +36,12 @@
 
     <string name="copied_to_clipboard">Copied to clipboard</string>
     <string name="camera_permission_denied">Camera permission is required to capture photos.</string>
+    <string name="camera_permission_title">Camera access needed</string>
+    <string name="camera_permission_body">Text Reader uses the camera to scan text from the world around you. Nothing leaves the phone \u2014 OCR runs on-device.</string>
+    <string name="camera_permission_grant">Grant camera access</string>
+    <string name="camera_permission_settings">Open app settings</string>
+    <string name="camera_hint">Point at text and tap the shutter</string>
+    <string name="btn_flash_desc">Toggle flash</string>
     <string name="notifications_permission_denied">Notifications are needed for background playback controls.</string>
 
     <string name="tts_error_network">Can\'t reach Kokoro server. Is Tailscale connected?</string>
@@ -36,6 +56,9 @@
     <string name="settings_save">Save</string>
     <string name="settings_test">Test voice</string>
 
+    <string name="btn_save_audio">Save audio</string>
+    <string name="save_success">Saved: %1$s</string>
+    <string name="save_failure">Couldn\'t save audio: %1$s</string>
     <string name="notification_channel_playback">TTS playback</string>
     <string name="notification_channel_playback_desc">Controls the background playback of text-to-speech audio.</string>
 </resources>

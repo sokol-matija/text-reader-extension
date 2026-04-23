@@ -2,34 +2,56 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg_elevated"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:paddingTop="16dp"
-    android:paddingBottom="24dp">
-
-    <!-- Drag handle -->
-    <View
-        android:layout_width="40dp"
-        android:layout_height="4dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="16dp"
-        android:background="@color/border_strong" />
+    android:background="@color/bg_base"
+    android:padding="16dp"
+    android:fitsSystemWindows="true">
 
     <TextView
         style="@style/TextReader.Label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/extracted_text_label"
+        android:text="@string/paste_text_label"
         android:layout_marginBottom="8dp" />
+
+    <EditText
+        android:id="@+id/textInput"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:minHeight="160dp"
+        android:background="@drawable/input_bg"
+        android:padding="12dp"
+        android:gravity="top|start"
+        android:inputType="textMultiLine|textCapSentences"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_placeholder"
+        android:hint="@string/paste_text_hint"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        style="@style/TextReader.Label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/voice_label"
+        android:layout_marginBottom="8dp" />
+
+    <Spinner
+        android:id="@+id/voiceSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:background="@drawable/input_bg"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:layout_marginBottom="16dp" />
 
     <com.google.android.material.chip.ChipGroup
         android:id="@+id/translationChipGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="12dp"
         android:visibility="gone"
         app:singleSelection="true"
         app:selectionRequired="true">
@@ -48,43 +70,6 @@
             android:layout_height="wrap_content"
             android:text="@string/chip_original" />
     </com.google.android.material.chip.ChipGroup>
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:minHeight="120dp"
-        android:maxHeight="320dp"
-        android:background="@drawable/input_bg"
-        android:padding="12dp"
-        android:layout_marginBottom="16dp">
-
-        <TextView
-            android:id="@+id/extractedText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="@color/text_primary"
-            android:textSize="15sp"
-            android:lineSpacingMultiplier="1.4"
-            android:textIsSelectable="true" />
-    </ScrollView>
-
-    <TextView
-        style="@style/TextReader.Label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/voice_label"
-        android:layout_marginBottom="8dp" />
-
-    <Spinner
-        android:id="@+id/voiceSpinner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="48dp"
-        android:background="@drawable/input_bg"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:layout_marginBottom="16dp" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnRead"
@@ -110,23 +95,13 @@
             android:enabled="false" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCopy"
+            android:id="@+id/btnClear"
             style="@style/TextReader.Button.Secondary"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:text="@string/btn_copy" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnRetake"
-            style="@style/TextReader.Button.Secondary"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="4dp"
-            android:text="@string/btn_retake" />
+            android:text="@string/btn_clear" />
     </LinearLayout>
 
     <Space
