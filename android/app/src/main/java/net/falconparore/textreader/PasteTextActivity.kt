@@ -19,8 +19,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.launch
 import java.io.File
@@ -36,20 +34,14 @@ class PasteTextActivity : AppCompatActivity() {
     private lateinit var btnRead: MaterialButton
     private lateinit var btnStop: MaterialButton
     private lateinit var btnClear: MaterialButton
+    private lateinit var btnStripMarkdown: MaterialButton
+    private lateinit var btnTranslate: MaterialButton
     private lateinit var voiceSpinner: Spinner
     private lateinit var playbackPanel: PlaybackPanel
-
-    private lateinit var chipGroup: ChipGroup
-    private lateinit var chipEnglish: Chip
-    private lateinit var chipOriginal: Chip
 
     private var controller: MediaController? = null
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var pendingSaveFile: File? = null
-
-    // Cleaned + translated pair for the last time the user tapped Read.
-    private var lastOriginal: String? = null
-    private var lastTranslated: String? = null
 
     private val createDocument = registerForActivityResult(
         ActivityResultContracts.CreateDocument("audio/mpeg")
@@ -84,9 +76,8 @@ class PasteTextActivity : AppCompatActivity() {
         btnRead = findViewById(R.id.btnRead)
         btnStop = findViewById(R.id.btnStop)
         btnClear = findViewById(R.id.btnClear)
-        chipGroup = findViewById(R.id.translationChipGroup)
-        chipEnglish = findViewById(R.id.chipEnglish)
-        chipOriginal = findViewById(R.id.chipOriginal)
+        btnStripMarkdown = findViewById(R.id.btnStripMarkdown)
+        btnTranslate = findViewById(R.id.btnTranslate)
 
         playbackPanel = PlaybackPanel(findViewById(R.id.playbackPanel), lifecycleScope).apply {
             onSaveRequested = { file ->
@@ -114,11 +105,10 @@ class PasteTextActivity : AppCompatActivity() {
         }
         btnClear.setOnClickListener {
             textInput.setText("")
-            chipGroup.visibility = View.GONE
-            lastOriginal = null
-            lastTranslated = null
             playbackPanel.reset()
         }
+        btnStripMarkdown.setOnClickListener { onStripMarkdownClicked() }
+        btnTranslate.setOnClickListener { onTranslateClicked() }
     }
 
     override fun onStart() {
@@ -133,52 +123,67 @@ class PasteTextActivity : AppCompatActivity() {
     }
 
     private fun onReadClicked() {
-        val raw = textInput.text.toString()
-        val cleaned = MarkdownStripper.strip(raw)
-        if (cleaned.isEmpty()) {
+        val text = textInput.text.toString()
+        if (text.isBlank()) {
             Toast.makeText(this, R.string.paste_empty, Toast.LENGTH_SHORT).show()
             return
         }
         btnRead.isEnabled = false
         btnStop.isEnabled = true
-
-        lifecycleScope.launch {
-            val detected = translation.detect(cleaned)
-            val translated = if (detected != null && detected != "en") {
-                translation.translateToEnglish(cleaned, detected)
-            } else null
-
-            lastOriginal = cleaned
-            lastTranslated = translated
-            updateChipsForTranslation(detected, translated)
-
-            val toRead = translated ?: cleaned
-            fetchAndPlay(toRead)
-        }
+        fetchAndPlay(text)
     }
 
-    private fun updateChipsForTranslation(detectedLang: String?, translated: String?) {
-        if (translated == null) {
-            chipGroup.visibility = View.GONE
-            chipGroup.setOnCheckedStateChangeListener(null)
+    private fun onStripMarkdownClicked() {
+        val raw = textInput.text.toString()
+        if (raw.isBlank()) {
+            Toast.makeText(this, R.string.paste_empty, Toast.LENGTH_SHORT).show()
             return
         }
-        chipGroup.visibility = View.VISIBLE
-        chipOriginal.text = if (!detectedLang.isNullOrBlank()) {
-            getString(R.string.chip_original_with_lang, detectedLang.uppercase())
-        } else {
-            getString(R.string.chip_original)
+        val cleaned = MarkdownStripper.strip(raw)
+        textInput.setText(cleaned)
+        textInput.setSelection(cleaned.length)
+    }
+
+    private fun onTranslateClicked() {
+        val raw = textInput.text.toString()
+        if (raw.isBlank()) {
+            Toast.makeText(this, R.string.paste_empty, Toast.LENGTH_SHORT).show()
+            return
         }
-        chipEnglish.isChecked = true
-        chipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
-            val original = lastOriginal ?: return@setOnCheckedStateChangeListener
-            val trans = lastTranslated ?: return@setOnCheckedStateChangeListener
-            val showEnglish = checkedIds.contains(R.id.chipEnglish)
-            val next = if (showEnglish) trans else original
-            // Re-fetch + replay so the seek bar + file reflect the current selection
-            btnRead.isEnabled = false
-            btnStop.isEnabled = true
-            fetchAndPlay(next)
+        btnTranslate.isEnabled = false
+        lifecycleScope.launch {
+            try {
+                val detected = translation.detect(raw)
+                if (detected == null) {
+                    Toast.makeText(
+                        this@PasteTextActivity,
+                        R.string.translate_unavailable,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@launch
+                }
+                if (detected == "en") {
+                    Toast.makeText(
+                        this@PasteTextActivity,
+                        R.string.translate_already_english,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@launch
+                }
+                val translated = translation.translateToEnglish(raw, detected)
+                if (translated == null) {
+                    Toast.makeText(
+                        this@PasteTextActivity,
+                        R.string.translate_unavailable,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@launch
+                }
+                textInput.setText(translated)
+                textInput.setSelection(translated.length)
+            } finally {
+                btnTranslate.isEnabled = true
+            }
         }
     }
 
