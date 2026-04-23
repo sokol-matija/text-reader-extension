@@ -20,6 +20,10 @@
     <string name="btn_retake">Retake</string>
     <string name="btn_copy">Copy</string>
     <string name="btn_clear">Clear</string>
+    <string name="btn_strip_markdown">Strip markdown</string>
+    <string name="btn_translate_english">Translate to English</string>
+    <string name="translate_unavailable">Translation unavailable for this text.</string>
+    <string name="translate_already_english">Text already looks like English.</string>
     <string name="btn_shutter_desc">Capture photo</string>
     <string name="btn_settings_desc">Settings</string>
     <string name="btn_paste_desc">Paste text</string>
