@@ -5,9 +5,15 @@
     <string name="status_ready">Ready</string>
     <string name="status_capturing">Capturing…</string>
     <string name="status_ocr">Reading image…</string>
+    <string name="status_translating">Translating…</string>
     <string name="status_fetching">Fetching audio…</string>
     <string name="status_playing">Playing</string>
     <string name="status_error">Error</string>
+
+    <string name="chip_english">English</string>
+    <string name="chip_original">Original</string>
+    <string name="chip_original_with_lang">Original (%1$s)</string>
+    <string name="translation_failed">Translation unavailable — showing original.</string>
 
     <string name="btn_read">Read aloud</string>
     <string name="btn_stop">Stop</string>

@@ -66,6 +66,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var settings: Settings
     private lateinit var ocr: OcrRepository
     private lateinit var tts: KokoroTtsClient
+    private lateinit var translation: TranslationRepository
 
     private var controller: MediaController? = null
     private var controllerFuture: ListenableFuture<MediaController>? = null
@@ -144,6 +145,7 @@ class MainActivity : AppCompatActivity() {
         settings = Settings(this)
         ocr = OcrRepository()
         tts = KokoroTtsClient(settings)
+        translation = TranslationRepository()
         reviewVoiceId = settings.voice
 
         shutterButton.setOnClickListener { capturePhoto() }
@@ -289,8 +291,8 @@ class MainActivity : AppCompatActivity() {
                 ).show()
                 return@launch
             }
-            loadingOverlay.visibility = View.GONE
             if (text.isBlank()) {
+                loadingOverlay.visibility = View.GONE
                 setStatus(R.string.status_error, R.color.status_error)
                 Toast.makeText(
                     this@MainActivity,
@@ -299,13 +301,27 @@ class MainActivity : AppCompatActivity() {
                 ).show()
                 return@launch
             }
-            currentText = text
+
+            // Try to detect language and translate to English — Kokoro voices
+            // are English-only, so this is what makes the app actually useful
+            // for non-English signage/menus.
+            val detectedLang = translation.detect(text)
+            val translated: String? = if (detectedLang != null && detectedLang != "en") {
+                setStatus(R.string.status_translating, R.color.status_info)
+                translation.translateToEnglish(text, detectedLang)
+            } else {
+                null
+            }
+
+            loadingOverlay.visibility = View.GONE
+            currentText = translated ?: text
             setStatus(R.string.status_ready, R.color.status_success)
-            openReviewSheet(text)
+            openReviewSheet(original = text, translated = translated, detectedLang = detectedLang)
         }
     }
 
-    private fun openReviewSheet(text: String) {
+    private fun openReviewSheet(original: String, translated: String?, detectedLang: String?) {
+        val text = translated ?: original
         val sheet = BottomSheetDialog(this, R.style.Theme_TextReader_BottomSheet)
         val view = layoutInflater.inflate(R.layout.bottom_sheet_review, null)
         sheet.setContentView(view)
@@ -318,6 +334,26 @@ class MainActivity : AppCompatActivity() {
         val btnRetake = view.findViewById<MaterialButton>(R.id.btnRetake)
 
         extractedText.text = text
+        var activeText: String = text
+
+        val chipGroup = view.findViewById<com.google.android.material.chip.ChipGroup>(R.id.translationChipGroup)
+        val chipEnglish = view.findViewById<com.google.android.material.chip.Chip>(R.id.chipEnglish)
+        val chipOriginal = view.findViewById<com.google.android.material.chip.Chip>(R.id.chipOriginal)
+        if (translated != null) {
+            chipGroup.visibility = View.VISIBLE
+            chipOriginal.text = if (!detectedLang.isNullOrBlank()) {
+                getString(R.string.chip_original_with_lang, detectedLang.uppercase())
+            } else {
+                getString(R.string.chip_original)
+            }
+            chipEnglish.isChecked = true
+            chipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
+                val showEnglish = checkedIds.contains(R.id.chipEnglish)
+                val next = if (showEnglish) translated else original
+                extractedText.text = next
+                activeText = next
+            }
+        }
 
         try {
             val panelRoot = view.findViewById<View>(R.id.playbackPanel)
@@ -355,7 +391,7 @@ class MainActivity : AppCompatActivity() {
         btnRead.setOnClickListener {
             btnRead.isEnabled = false
             btnStop.isEnabled = true
-            fetchAndPlay(text)
+            fetchAndPlay(activeText)
         }
         btnStop.setOnClickListener {
             controller?.stop()
@@ -365,7 +401,7 @@ class MainActivity : AppCompatActivity() {
             setStatus(R.string.status_ready, R.color.status_success)
         }
         btnCopy.setOnClickListener {
-            val clip = ClipData.newPlainText("extracted", text)
+            val clip = ClipData.newPlainText("extracted", activeText)
             (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
             Toast.makeText(this, R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show()
         }
